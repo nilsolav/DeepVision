@@ -8,12 +8,12 @@ library(grid)
 require(gridExtra)
 require(ggiraph)
 require(ggiraphExtra)
-setwd('D:/repos/Github/deepVision')
+setwd('D:/repos/Github/DeepVision')
 
 dat <- data.table::fread("Predictions_vs_catchdata2018.csv", sep=";",header=T)
-dat$Herring_other = dat$Mackerel_pred+dat$BW_pred
-dat$BW_other = dat$Mackerel_pred+dat$Herring_pred
-dat$Mackerel_other = dat$Herring_pred+dat$BW_pred
+dat$Herring_other = dat$Mackerel_catch+dat$BW_catch
+dat$BW_other = dat$Mackerel_catch+dat$Herring_catch
+dat$Mackerel_other = dat$Herring_catch+dat$BW_catch
 dat$Pred = dat$Herring_pred+dat$BW_pred+dat$Mackerel_pred
 dat$Catch = dat$Herring_catch+dat$BW_catch+dat$Mackerel_catch
 
@@ -59,11 +59,11 @@ fit_all=lm(log(Catch+1)~log(Pred+1),data=dat)
 fit_all=lm(Catch~Pred,data=dat)
 summary(fit_all)
 #plot(fit_all)
-p1log<-ggplot(dat,aes(y=log(Catch+1),x=log(Pred+1))) +
+p1log<-ggplot(dat,aes(y=log(Pred+1),x=log(Catch+1))) +
   geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
   geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
-  scale_x_continuous(name="log(1+Predicted)") +
-  scale_y_continuous(name="log(1+Catch)")
+  scale_y_continuous(name="log(1+Predicted)") +
+  scale_x_continuous(name="log(1+Catch)")
 p1log
 
 #
@@ -83,12 +83,12 @@ summary(fit_Herring2)
 #ggPredict(fit_Herring2,dat)
 
 # Herring model plot
-p2log<-ggplot(dat,aes(y=log(Herring_catch+1),x=log(Herring_pred+1),col=log(Herring_other+1))) +
+p2log<-ggplot(dat,aes(y=log(Herring_pred+1),x=log(Herring_catch+1),col=log(Herring_other+1))) +
   geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
   geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
-  scale_x_continuous(name="log(1+Herring Predicted)") +
-  scale_y_continuous(name="log(1+Herring Catch)")  +
-  scale_color_continuous(limits=c(0,13),name="") +
+  scale_y_continuous(name="log(1+Herring Predicted)") +
+  scale_x_continuous(name="log(1+Herring Catch)")  +
+  scale_color_continuous(limits=c(0,10),name="") +
   theme(legend.position = c(0.8, 0.3))
 p2log
 
@@ -102,13 +102,13 @@ anova(fit_BW1,fit_BW2)
 summary(fit_BW2)
 
 # Blue whiting model plot
-p3log<-ggplot(dat,aes(y=log(BW_catch+1),x=log(BW_pred+1),col=log(BW_other+1))) +
+p3log<-ggplot(dat,aes(y=log(BW_pred+1),x=log(BW_catch+1),col=log(BW_other+1))) +
   geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
   geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
-  scale_x_continuous(name="log(1+BW Predicted)") +
-  scale_y_continuous(name="log(1+BW Catch)") +
+  scale_y_continuous(name="log(1+BW Predicted)") +
+  scale_x_continuous(name="log(1+BW Catch)") +
   theme(legend.position = c(0.9, 0.2),legend.title = element_blank()) +
-  scale_color_continuous(guide=FALSE,limits=c(0,13))
+  scale_color_continuous(guide=FALSE,limits=c(0,10))
 p3log
 
 #
@@ -126,11 +126,9 @@ p4log<-ggplot(dat,aes(y=log(Mackerel_catch+1),x=log(Mackerel_pred+1),col=log(Mac
   geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
   scale_x_continuous(name="log(1+Mackerel Predicted)") +
   scale_y_continuous(name="log(1+Mackerel Catch)") +
-  scale_color_continuous(guide=FALSE,limits=c(0,13))
+  scale_color_continuous(guide=FALSE,limits=c(0,10))
 #theme(legend.position = c(0.9, 0.2),legend.title = element_blank())
 #theme(legend.position="bottom")
-
-
 
 myplot1 <- arrangeGrob(p1log, 
                        top = textGrob("(A)", x = unit(0, "npc")
@@ -151,7 +149,7 @@ myplot4 <- arrangeGrob(p4log, top = textGrob("(D)", x = unit(0, "npc")
 g <- arrangeGrob(myplot1,myplot2,myplot3,myplot4, ncol=2,nrow=2)
 
 ggsave(file="CatchVsPredictions.png", g)
-g
+
 
 
 # Extract linear coefficients
