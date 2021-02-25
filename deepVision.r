@@ -8,6 +8,7 @@ library(grid)
 require(gridExtra)
 require(ggiraph)
 require(ggiraphExtra)
+library(colorspace)
 setwd('D:/repos/Github/DeepVision')
 
 dat <- data.table::fread("Predictions_vs_catchdata2018.csv", sep=";",header=T)
@@ -61,7 +62,7 @@ summary(fit_all)
 #plot(fit_all)
 p1log<-ggplot(dat,aes(y=log(Pred+1),x=log(Catch+1))) +
   geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  #geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
   scale_y_continuous(name="log(1+Predicted)") +
   scale_x_continuous(name="log(1+Catch)")
 p1log
@@ -71,8 +72,8 @@ p1log
 #
 
 # Add in the other covariates
-fit_Herring1=lm(log(Herring_catch+1)~log(Herring_pred+1),data=dat)
-fit_Herring2=lm(log(Herring_catch+1)~log(Herring_pred+1) + log(Herring_other+1),data=dat)
+fit_Herring1=lm(log(Herring_pred+1)~log(Herring_catch+1),data=dat)
+fit_Herring2=lm(log(Herring_pred+1)~log(Herring_catch+1)*log(Herring_other+1),data=dat)
 # compare models
 anova(fit_Herring1,fit_Herring2)
 # Model 2 is used for Herring
@@ -85,13 +86,14 @@ p2log<-ggplot(dat,aes(y=log(Herring_pred+1),x=log(Herring_catch+1),col=log(Herri
   geom_point()+#geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
   scale_y_continuous(name="log(1+Herring Predicted)") +
   scale_x_continuous(name="log(1+Herring Catch)")  +
-  scale_color_continuous(limits=c(0,10),name="") +
+  scale_color_continuous(limits=c(0,10), low = "blue",
+                         high = "red", space = "Lab", name = "")+
   theme(legend.position = c(0.8, 0.3)) +
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="green") + # for value 0 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="blue") + # for value 0 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="green")   # for value 8 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="red")   # for value 8 of covariate 2   (BW_other+1)
 p2log
 
 #
@@ -112,12 +114,13 @@ p3log<-ggplot(dat,aes(y=log(BW_pred+1),x=log(BW_catch+1),col=log(BW_other+1))) +
   scale_y_continuous(name="log(1+BW Predicted)") +
   scale_x_continuous(name="log(1+BW Catch)") +
   theme(legend.position = c(0.9, 0.2),legend.title = element_blank()) +
-  scale_color_continuous(guide=FALSE,limits=c(0,10)) +
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="green") + # for value 0 of covariate 2   (BW_other+1)
+  scale_color_continuous(limits=c(0,10), low = "blue",
+                         high = "red", space = "Lab", guide = FALSE)+
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="blue") + # for value 0 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="green")   # for value 8 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="red")   # for value 8 of covariate 2   (BW_other+1)
 p3log
 coef(fit)[4]
 #
@@ -136,16 +139,17 @@ p4log<-ggplot(dat,aes(y=log(Mackerel_pred+1),x=log(Mackerel_catch+1),col=log(Mac
   geom_point()+#geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
   scale_y_continuous(name="log(1+Mackerel Predicted)") +
   scale_x_continuous(name="log(1+Mackerel Catch)") +
-  scale_color_continuous(guide=FALSE,limits=c(0,10))+
+  #scale_color_gradient(guide=FALSE,limits=c(0,10))+
+  scale_color_continuous(limits=c(0,10), low = "blue",
+                       high = "red", space = "Lab", guide = FALSE)+
   # this plots the multiple regression with interaction:
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="green") + # for value 0 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="blue") + # for value 0 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="green")   # for value 8 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="red")   # for value 8 of covariate 2   (BW_other+1)
 p4log
-#theme(legend.position = c(0.9, 0.2),legend.title = element_blank())
-#theme(legend.position="bottom")
+
 myplot1 <- arrangeGrob(p1log, 
                        top = textGrob("(A)", x = unit(0, "npc")
                                       , y   = unit(1, "npc"), just=c("left","top"),
