@@ -77,59 +77,75 @@ fit_Herring2=lm(log(Herring_catch+1)~log(Herring_pred+1) + log(Herring_other+1),
 anova(fit_Herring1,fit_Herring2)
 # Model 2 is used for Herring
 summary(fit_Herring2)
-
-# This does not work...
-#ggPredict(fit_Herring2,interactive=TRUE)
-#ggPredict(fit_Herring2,dat)
+fit <- fit_Herring2
 
 # Herring model plot
 p2log<-ggplot(dat,aes(y=log(Herring_pred+1),x=log(Herring_catch+1),col=log(Herring_other+1))) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
   scale_y_continuous(name="log(1+Herring Predicted)") +
   scale_x_continuous(name="log(1+Herring Catch)")  +
   scale_color_continuous(limits=c(0,10),name="") +
-  theme(legend.position = c(0.8, 0.3))
+  theme(legend.position = c(0.8, 0.3)) +
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="green") + # for value 0 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="green")   # for value 8 of covariate 2   (BW_other+1)
 p2log
 
 #
 # Blue whiting
 #
 
-fit_BW1=lm(log(BW_catch+1)~log(BW_pred+1),data=dat)
-fit_BW2=lm(log(BW_catch+1)~log(BW_pred+1)+(BW_other+1),data=dat)
+fit_BW1=lm(log(BW_pred+1)~log(BW_catch+1),data=dat)
+fit_BW2=lm(log(BW_pred+1)~log(BW_catch+1)*(BW_other+1),data=dat)
+
 anova(fit_BW1,fit_BW2)
 summary(fit_BW2)
+fit <- fit_BW2
 
 # Blue whiting model plot
 p3log<-ggplot(dat,aes(y=log(BW_pred+1),x=log(BW_catch+1),col=log(BW_other+1))) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
   scale_y_continuous(name="log(1+BW Predicted)") +
   scale_x_continuous(name="log(1+BW Catch)") +
   theme(legend.position = c(0.9, 0.2),legend.title = element_blank()) +
-  scale_color_continuous(guide=FALSE,limits=c(0,10))
+  scale_color_continuous(guide=FALSE,limits=c(0,10)) +
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="green") + # for value 0 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="green")   # for value 8 of covariate 2   (BW_other+1)
 p3log
-
+coef(fit)[4]
 #
 # Mackerel
 #
 
 fit_mackerel1=lm(log(Mackerel_catch+1)~log(Mackerel_pred+1),data=dat)
-fit_mackerel2=lm(log(Mackerel_catch+1)~log(Mackerel_pred+1)+(Mackerel_other+1),data=dat)
+fit_mackerel2=lm(log(Mackerel_pred+1)~log(Mackerel_catch+1)*log(Mackerel_other+1),data=dat)
 anova(fit_mackerel1,fit_mackerel2)
-summary(fit_BW2)
-
+summary(fit_mackerel2)
+#mackerel_other = 0:2:10
+fit <- fit_mackerel2
 # Mackerel plot
-p4log<-ggplot(dat,aes(y=log(Mackerel_catch+1),x=log(Mackerel_pred+1),col=log(Mackerel_other+1))) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
-  scale_x_continuous(name="log(1+Mackerel Predicted)") +
-  scale_y_continuous(name="log(1+Mackerel Catch)") +
-  scale_color_continuous(guide=FALSE,limits=c(0,10))
+p4log<-ggplot(dat,aes(y=log(Mackerel_pred+1),x=log(Mackerel_catch+1),col=log(Mackerel_other+1))) +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  scale_y_continuous(name="log(1+Mackerel Predicted)") +
+  scale_x_continuous(name="log(1+Mackerel Catch)") +
+  scale_color_continuous(guide=FALSE,limits=c(0,10))+
+  # this plots the multiple regression with interaction:
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="green") + # for value 0 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
+  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="green")   # for value 8 of covariate 2   (BW_other+1)
+p4log
 #theme(legend.position = c(0.9, 0.2),legend.title = element_blank())
 #theme(legend.position="bottom")
-
 myplot1 <- arrangeGrob(p1log, 
                        top = textGrob("(A)", x = unit(0, "npc")
                                       , y   = unit(1, "npc"), just=c("left","top"),
