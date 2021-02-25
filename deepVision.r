@@ -2,12 +2,23 @@ require(plyr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+require(moonBook)
+require(ggplot2)
+library(grid)
+require(gridExtra)
+require(ggiraph)
+require(ggiraphExtra)
 setwd('D:/repos/Github/deepVision')
-install.packages("devtools")
-devtools::install_github("cardiomoon/ggiraphExtra")
 
 dat <- data.table::fread("Predictions_vs_catchdata2018.csv", sep=";",header=T)
+dat$Herring_other = dat$Mackerel_pred+dat$BW_pred
+dat$BW_other = dat$Mackerel_pred+dat$Herring_pred
+dat$Mackerel_other = dat$Herring_pred+dat$BW_pred
+dat$Pred = dat$Herring_pred+dat$BW_pred+dat$Mackerel_pred
+dat$Catch = dat$Herring_catch+dat$BW_catch+dat$Mackerel_catch
+
 names(dat)
+
 
 #
 # Try different distributions
@@ -36,93 +47,120 @@ ggplot(dat,aes(y=log(Herring_catch+1),x=log(Herring_pred+1))) +geom_point()+geom
 # this looks somewhat better, but still there is a residual issue
 
 #
-# log-log model for stats
+# Settle with log-log model for stats
+#
+
+#
+# Cathces combined
+#
+
+# Add in the other covariates
+fit_all=lm(log(Catch+1)~log(Pred+1),data=dat)
+fit_all=lm(Catch~Pred,data=dat)
+summary(fit_all)
+#plot(fit_all)
+p1log<-ggplot(dat,aes(y=log(Catch+1),x=log(Pred+1))) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  scale_x_continuous(name="log(1+Predicted)") +
+  scale_y_continuous(name="log(1+Catch)")
+p1log
+
+#
+# Herring
 #
 
 # Add in the other covariates
 fit_Herring1=lm(log(Herring_catch+1)~log(Herring_pred+1),data=dat)
-fit_Herring2a=lm(log(Herring_catch+1)~log(Herring_pred+1)+log(BW_pred+1),data=dat)
-fit_Herring2b=lm(log(Herring_catch+1)~log(Herring_pred+1)+log(Mackerel_pred+1),data=dat)
-fit_Herring3=lm(log(Herring_catch+1)~log(Herring_pred+1)+log(BW_pred+1)+log(Mackerel_pred+1),data=dat)
-
+fit_Herring2=lm(log(Herring_catch+1)~log(Herring_pred+1) + log(Herring_other+1),data=dat)
 # compare models
-anova(fit_Herring1,fit_Herring2a)
-anova(fit_Herring1,fit_Herring2b) # Not significant
-anova(fit_Herring2a,fit_Herring3) # Not significant
-# Model 2a is used
-summary(fit_Herring2a)
-plot(fit_Herring2a)
+anova(fit_Herring1,fit_Herring2)
+# Model 2 is used for Herring
+summary(fit_Herring2)
 
-p1<-ggplot(dat,aes(y=log(Herring_catch+1),x=log(Herring_pred+1),col=log(BW_pred+1))) +geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F)
+# This does not work...
+#ggPredict(fit_Herring2,interactive=TRUE)
+#ggPredict(fit_Herring2,dat)
 
-p1
+# Herring model plot
+p2log<-ggplot(dat,aes(y=log(Herring_catch+1),x=log(Herring_pred+1),col=log(Herring_other+1))) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  scale_x_continuous(name="log(1+Herring Predicted)") +
+  scale_y_continuous(name="log(1+Herring Catch)")  +
+  scale_color_continuous(limits=c(0,13),name="") +
+  theme(legend.position = c(0.8, 0.3))
+p2log
+
+#
 # Blue whiting
+#
+
 fit_BW1=lm(log(BW_catch+1)~log(BW_pred+1),data=dat)
-fit_BW2a=lm(log(BW_catch+1)~log(BW_pred+1)+log(Herring_pred+1),data=dat)
-fit_BW2b=lm(log(BW_catch+1)~log(BW_pred+1)+log(Mackerel_pred+1),data=dat)
-fit_BW3=lm(log(BW_catch+1)~log(BW_pred+1)+log(Mackerel_pred+1)++log(Herring_pred+1),data=dat)
-anova(fit_BW1,fit_BW2a)
-anova(fit_BW1,fit_BW2b)
-anova(fit_BW1,fit_BW3)
+fit_BW2=lm(log(BW_catch+1)~log(BW_pred+1)+(BW_other+1),data=dat)
+anova(fit_BW1,fit_BW2)
+summary(fit_BW2)
 
-summary(fit_BW1)
+# Blue whiting model plot
+p3log<-ggplot(dat,aes(y=log(BW_catch+1),x=log(BW_pred+1),col=log(BW_other+1))) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  scale_x_continuous(name="log(1+BW Predicted)") +
+  scale_y_continuous(name="log(1+BW Catch)") +
+  theme(legend.position = c(0.9, 0.2),legend.title = element_blank()) +
+  scale_color_continuous(guide=FALSE,limits=c(0,13))
+p3log
 
-p2<-ggplot(dat,aes(y=log(BW_catch+1),x=log(BW_pred+1))) +geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F)
-
-p2
-anova(fit_Herring1,fit_Herring2a)
-anova(fit_Herring1,fit_Herring2b) # Not significant
-anova(fit_Herring2a,fit_Herring3) # Not significant
-
-
-p2<-ggplot(dat,aes(y=log(BW_catch+1),x=log(BW_pred+1),col=log(Herring_pred+1))) +geom_point()+geom_smooth(method = "glm",  formula=y~x, se = F)
-
+#
 # Mackerel
-fit_Mackerel=lm(log(Mackerel_catch+1)~log(Herring_pred+1)+log(BW_pred+1)+log(Mackerel_pred+1),data=dat)
-summary(fit_Mackerel)
-p3<-ggplot(dat,aes(y=log(Mackerel_catch+1),x=log(Mackerel_pred+1),col=log(Herring_pred+1))) +geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F)
-
-require(grid)
-require(ggpubr)
-p1
-p2
-p3
-
-
-#
-# Linear models for comparison with confusion matrix
 #
 
-# Linear model
-fit_Herring_lin =lm(Herring_catch ~0+Herring_pred+BW_pred+Mackerel_pred,data=dat)
-summary(fit_Herring_lin)
-fit_BW_lin      =lm(BW_catch      ~0+Herring_pred+BW_pred+Mackerel_pred,data=dat)
-summary(fit_BW_lin)
-fit_Mackerel_lin=lm(Mackerel_catch~0+Herring_pred+BW_pred+Mackerel_pred,data=dat)
-summary(fit_BW_Mackerel)
+fit_mackerel1=lm(log(Mackerel_catch+1)~log(Mackerel_pred+1),data=dat)
+fit_mackerel2=lm(log(Mackerel_catch+1)~log(Mackerel_pred+1)+(Mackerel_other+1),data=dat)
+anova(fit_mackerel1,fit_mackerel2)
+summary(fit_BW2)
+
+# Mackerel plot
+p4log<-ggplot(dat,aes(y=log(Mackerel_catch+1),x=log(Mackerel_pred+1),col=log(Mackerel_other+1))) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  scale_x_continuous(name="log(1+Mackerel Predicted)") +
+  scale_y_continuous(name="log(1+Mackerel Catch)") +
+  scale_color_continuous(guide=FALSE,limits=c(0,13))
+#theme(legend.position = c(0.9, 0.2),legend.title = element_blank())
+#theme(legend.position="bottom")
+
+
+
+myplot1 <- arrangeGrob(p1log, 
+                       top = textGrob("(A)", x = unit(0, "npc")
+                                      , y   = unit(1, "npc"), just=c("left","top"),
+                                      gp=gpar(col="black", fontsize=18)))
+
+myplot2 <- arrangeGrob(p2log, top = textGrob("(B)", x = unit(0, "npc")
+                                               , y = unit(1, "npc"), just=c("left","top"),
+                                               gp=gpar(col="black", fontsize=18)))
+
+myplot3 <- arrangeGrob(p3log, top = textGrob("(C)", x = unit(0, "npc")
+                                               , y  = unit(1, "npc"), just=c("left","top"),
+                                               gp=gpar(col="black", fontsize=18)))
+
+myplot4 <- arrangeGrob(p4log, top = textGrob("(D)", x = unit(0, "npc")
+                                               , y = unit(1, "npc"), just=c("left","top"),
+                                               gp=gpar(col="black",    fontsize=18)))
+g <- arrangeGrob(myplot1,myplot2,myplot3,myplot4, ncol=2,nrow=2)
+
+ggsave(file="CatchVsPredictions.png", g)
+g
+
 
 # Extract linear coefficients
-lin <- fit_Herring_lin$coefficients
-lin <- rbind(lin,fit_BW_lin$coefficients)
-lin <- rbind(lin,fit_Mackerel_lin$coefficients)
+lin <- t(fit_all$coefficients)
+lin <- cbind(lin,0)
+lin <- rbind(lin,fit_Herring2$coefficients)
+lin <- rbind(lin,fit_BW2$coefficients)
+lin <- rbind(lin,fit_mackerel2$coefficients)
 
-p3<-ggplot(dat,aes(y=log(1+Herring_catch),x=log(1+Herring_pred))) +
-  geom_point() + 
-  geom_smooth(method = "lm",  formula=y~0+x, se = F) +
-  geom_smooth(method = "lm",  formula=y~x, se = F, colour="red") +
-  scale_x_continuous(name="log(1+Herring Predicted)", limits=c(0, 10)) +
-  scale_y_continuous(name="log(1+Herring Catch)", limits=c(0, 8))
-p3<-ggplot(dat,aes(y=Herring_catch,x=Herring_pred)) +
-  geom_point() + 
-  geom_smooth(method = "lm",  formula=y~0+x, se = F) +
-  geom_smooth(method = "lm",  formula=y~x, se = F, colour="red") 
-  scale_x_continuous(name="log(1+Herring Predicted)", limits=c(0, 10)) +
-  scale_y_continuous(name="log(1+Herring Catch)", limits=c(0, 8))
-p3
-p3<-ggplot(dat,aes(y=log(Mackerel_catch+1),x=log(Mackerel_pred+1),col=log(Herring_pred+1))) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F)+
-
-p3
 # Herring_pred  BW_pred       Mackerel_pred
 # 0.0606497897 -0.005805911   0.008048434
 #-0.0013641536  0.110024823  -0.004669844
