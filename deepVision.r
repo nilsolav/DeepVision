@@ -56,17 +56,21 @@ ggplot(dat,aes(y=log(Herring_catch+1),x=log(Herring_pred+1))) +geom_point()+geom
 #
 
 # Add in the other covariates
-fit_all=lm(log(Catch+1)~log(Pred+1),data=dat)
-fit_all=lm(Catch~Pred,data=dat)
+fit_all=lm(log(Pred+1)~log(Catch+1),data=dat)
+#fit_all=lm(Catch~Pred,data=dat)
 summary(fit_all)
+anova(fit_all)
+fit <- fit_all
+
 #plot(fit_all)
 p1log<-ggplot(dat,aes(y=log(Pred+1),x=log(Catch+1))) +
-  geom_point()+geom_smooth(method = "lm",  formula=y~x, se = F) +
+  geom_point()+#geom_smooth(method = "lm",  formula=y~x, se = F) +
   #geom_point()+geom_smooth(method = "lm",  formula=y~0+x, se = F, col='red') +
+  geom_abline(slope=coef(fit)[2], intercept=coef(fit)[1], col="black") + # for value 0 of covariate 2   (BW_other+1)
   scale_y_continuous(name="log(1+Predicted)") +
   scale_x_continuous(name="log(1+Catch)")
 p1log
-
+coef(fit)
 #
 # Herring
 #
@@ -90,9 +94,9 @@ p2log<-ggplot(dat,aes(y=log(Herring_pred+1),x=log(Herring_catch+1),col=log(Herri
                          high = "red", space = "Lab", name = "")+
   theme(legend.position = c(0.8, 0.3)) +
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="blue") + # for value 0 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="red")   # for value 8 of covariate 2   (BW_other+1)
 p2log
 
@@ -101,7 +105,7 @@ p2log
 #
 
 fit_BW1=lm(log(BW_pred+1)~log(BW_catch+1),data=dat)
-fit_BW2=lm(log(BW_pred+1)~log(BW_catch+1)*(BW_other+1),data=dat)
+fit_BW2=lm(log(BW_pred+1)~log(BW_catch+1)*log(BW_other+1),data=dat)
 
 anova(fit_BW1,fit_BW2)
 summary(fit_BW2)
@@ -117,12 +121,11 @@ p3log<-ggplot(dat,aes(y=log(BW_pred+1),x=log(BW_catch+1),col=log(BW_other+1))) +
   scale_color_continuous(limits=c(0,10), low = "blue",
                          high = "red", space = "Lab", guide = FALSE)+
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="blue") + # for value 0 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="red")   # for value 8 of covariate 2   (BW_other+1)
 p3log
-coef(fit)[4]
 #
 # Mackerel
 #
@@ -144,9 +147,9 @@ p4log<-ggplot(dat,aes(y=log(Mackerel_pred+1),x=log(Mackerel_catch+1),col=log(Mac
                        high = "red", space = "Lab", guide = FALSE)+
   # this plots the multiple regression with interaction:
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*0),intercept=(coef(fit)[1]+coef(fit)[3]*0), col="blue") + # for value 0 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
-  geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*2),intercept=(coef(fit)[1]+coef(fit)[3]*2), col="green") + # for value 2 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*4),intercept=(coef(fit)[1]+coef(fit)[3]*4), col="green") + # for value 4 of covariate 2   (BW_other+1)
+  #geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*6),intercept=(coef(fit)[1]+coef(fit)[3]*6), col="green") + # for value 6 of covariate 2   (BW_other+1)
   geom_abline(slope=(coef(fit)[2]+coef(fit)[4]*8),intercept=(coef(fit)[1]+coef(fit)[3]*8), col="red")   # for value 8 of covariate 2   (BW_other+1)
 p4log
 
@@ -171,18 +174,5 @@ g <- arrangeGrob(myplot1,myplot2,myplot3,myplot4, ncol=2,nrow=2)
 ggsave(file="CatchVsPredictions.png", g)
 
 
-
-# Extract linear coefficients
-lin <- t(fit_all$coefficients)
-lin <- cbind(lin,0)
-lin <- rbind(lin,fit_Herring2$coefficients)
-lin <- rbind(lin,fit_BW2$coefficients)
-lin <- rbind(lin,fit_mackerel2$coefficients)
-
-# Herring_pred  BW_pred       Mackerel_pred
-# 0.0606497897 -0.005805911   0.008048434
-#-0.0013641536  0.110024823  -0.004669844
-#-0.0008735669  0.002313991   0.024529442
-1/lin
 
 
