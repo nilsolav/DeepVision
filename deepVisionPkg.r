@@ -1,0 +1,7 @@
+install.packages("plyr")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("ggplot2")
+install.packages("grid")
+install.packages("gridExtra")
+install.packages("colorspace")

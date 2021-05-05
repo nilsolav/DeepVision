@@ -1,14 +1,16 @@
-require(plyr)
+library(plyr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-require(moonBook)
-require(ggplot2)
+#require(moonBook)
+library(ggplot2)
 library(grid)
-require(gridExtra)
-require(ggiraph)
-require(ggiraphExtra)
+library(gridExtra)
 library(colorspace)
+library(data.table)
+library(ggiraph)
+#require(ggiraphExtra)
+
 setwd('D:/repos/Github/DeepVision')
 
 dat <- data.table::fread("Predictions_vs_catchdata2018.csv", sep=";",header=T)
@@ -130,7 +132,7 @@ p3log
 # Mackerel
 #
 
-fit_mackerel1=lm(log(Mackerel_catch+1)~log(Mackerel_pred+1),data=dat)
+fit_mackerel1=lm(log(Mackerel_pred+1)~log(Mackerel_catch+1),data=dat)
 fit_mackerel2=lm(log(Mackerel_pred+1)~log(Mackerel_catch+1)*log(Mackerel_other+1),data=dat)
 anova(fit_mackerel1,fit_mackerel2)
 summary(fit_mackerel2)
