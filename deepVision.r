@@ -22,6 +22,16 @@ dat$Catch = dat$Herring_catch+dat$BW_catch+dat$Mackerel_catch
 
 names(dat)
 
+# The sum over all stations of Deep Vision counts divided by the catches are:
+
+# To check this, we first summed the Deep Vision counts across all stations
+# for a given species (Table~\ref{tab:pred_catch}) and divided by the summed
+# catch. The ratios were
+
+sum(dat$BW_pred)/sum(dat$BW_catch)
+sum(dat$Herring_pred)/sum(dat$Herring_catch)
+sum(dat$Mackerel_pred)/sum(dat$Mackerel_catch)
+
 
 #
 # Try different distributions
